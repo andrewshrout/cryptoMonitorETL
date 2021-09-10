@@ -1,15 +1,15 @@
 # Bitcoin Monitor
 
-This is an ETL pipeline to pull bitcoin exchange data from [CoinCap API](https://docs.coincap.io/) and load it into our data warehouse. For more details check out the blog at https://startdataengineering.com/post/data-engineering-project-to-impress-hiring-managers/
+This is an ETL pipeline to pull bitcoin exchange data from [CoinCap API](https://docs.coincap.io/) and load it into a data warehouse.
 
 ## Architecture
 
 ![Arch](assets/images/bc_arch.png)
 
-We use python to pull, transform and load data. Our warehouse is postgres. We also spin up a Metabase instance for our presentation layer.
+We use python to pull, transform and load data. Our warehouse is postgres.
+We also spin up a Metabase instance for our presentation layer.
 
 All of the components are running as docker containers.
-## Setup
 
 ### Pre-requisites
 
@@ -17,6 +17,7 @@ All of the components are running as docker containers.
 2. [AWS account](https://aws.amazon.com/).
 3. [AWS CLI installed](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) and [configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 4. [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+
 ### Local
 
 We have a [`Makefile`](Makefile) with common commands. These are executed in the running container.

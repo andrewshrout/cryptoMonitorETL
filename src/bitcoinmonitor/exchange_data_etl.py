@@ -58,6 +58,66 @@ def _get_exchange_insert_query() -> str:
     );
     '''
 
+#TODO: make function grab any asset (BTC, ETH, cardano)
+#TODO: get timestamp and verify
+
+def get_cardano_data() -> List[Dict[str, Any]]:
+    url = 'https://api.coincap.io/v2/assets/cardano'
+    try:
+        r = requests.get(url)
+    except requests.ConnectionError as ce:
+        logging.error(f"There was an error with the request, {ce}")
+        sys.exit(1)
+    data = r.json().get('data', [])
+    time = r.json().get('timestamp', [])
+    composite = [data, time]
+    return composite
+
+def get_assets_data() -> List[Dict[str, Any]]:
+    url = 'https://api.coincap.io/v2/assets'
+    try:
+        r = requests.get(url)
+    except requests.ConnectionError as ce:
+        logging.error(f"There was an error with the request, {ce}")
+        sys.exit(1)
+    return r.json().get('data', [])
+
+def _get_coin_insert_query() -> str:
+    return '''
+    INSERT INTO crypto.asset (
+        id,
+        name,
+        rank,
+        symbol,
+        supply,
+        maxSupply,
+        marketCapUsd,
+        volumeUsd24Hr,
+        priceUsd,
+        changePercent24Hr,
+        vwap24Hr,
+        timestamp,
+        update_dt
+    )
+    VALUES (
+        %(exchangeId)s,
+        %(name)s,
+        %(rank)s,
+        %(symbol)s,
+        %(maxSupply)s,
+        %(marketCapUsd)s,
+        %(priceUsd)s,
+        %(changePercent24Hr)s,
+        %(volumeUsd24Hr)s,
+        %(vwap24Hr)s,
+        %(timestamp)s,
+        %(update_dt)s,
+
+    );
+    '''
+
+
+
 
 def run() -> None:
     data = get_exchange_data()
@@ -66,6 +126,25 @@ def run() -> None:
     with WarehouseConnection(get_warehouse_creds()).managed_cursor() as curr:
         p.execute_batch(curr, _get_exchange_insert_query(), data)
 
+def cardanoRun() -> None:   
+    #Cardano fetch / upload
+    #TODO: make this it's own generalized function
+    cardanoData = get_cardano_data()
+    time = get_utc_from_unix_time(cardanoData[1])
+    cardanoDict = cardanoData[0]
+    cardanoDict['update_dt'] = time
+    with WarehouseConnection(get_warehouse_creds()).managed_cursor() as curr:
+        p.execute_batch(curr, _get_coin_insert_query(), cardanoDict)    
+
+def coinRun() -> None:
+    data = get_assets_data()
+    timeInsert = datetime.datetime.now()
+    for d in data:
+        d['update_dt'] = timeInsert
+    with WarehouseConnection(get_warehouse_creds()).managed_cursor() as curr:
+        p.execute_batch(curr, _get_coin_insert_query(), data)
+
 
 if __name__ == '__main__':
-    run()
+    #run()
+    coinRun()
